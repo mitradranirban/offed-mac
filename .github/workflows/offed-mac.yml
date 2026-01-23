@@ -31,16 +31,14 @@ jobs:
         # Verify installation
         xcode-select -p
         xcodebuild -version
-    - name: Install Node.js and npm
+    - name: Create package.json (required for npm)
+      run: echo '{"private": true}' > package.json
+      
+    - name: Install Node.js and npm (no cache)
       uses: actions/setup-node@v4
       with:
         node-version: '20'
-        cache: 'npm'
-        
-    - name: Create package.json (for npm cache)
-      run: |
-        mkdir -p .npm-cache
-        echo '{}' > package.json
+        cache: false  # Disable cache since no lockfile
         
     - name: Install TailwindCSS CLI
       run: npm install -D tailwindcss @tailwindcss/cli
