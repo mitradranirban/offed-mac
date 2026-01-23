@@ -22,10 +22,15 @@ jobs:
       with:
         targets: wasm32-unknown-unknown
         
-    - name: Install Xcode command line tools
+    - name: Setup Xcode (idempotent)
       run: |
-        sudo xcode-select --install --switch /Applications/Xcode.app/Contents/Developer
-      
+        # Accept Xcode license and select developer directory
+        sudo xcodebuild -license accept || true
+        sudo xcode-select --switch /Applications/Xcode.app/Contents/Developer || true
+        
+        # Verify installation
+        xcode-select -p
+        xcodebuild -version
     - name: Install Node.js and npm
       uses: actions/setup-node@v4
       with:
