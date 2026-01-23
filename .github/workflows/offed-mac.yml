@@ -63,7 +63,6 @@ jobs:
       uses: actions/setup-node@v4
       with:
         node-version: '20'
-        cache: false  # Disable cache since no lockfile
         
     - name: Install TailwindCSS CLI
       run: npm install -D tailwindcss @tailwindcss/cli
