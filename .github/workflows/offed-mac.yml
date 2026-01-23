@@ -15,10 +15,9 @@ jobs:
     
     steps:
     - name: Checkout GitLab repository
-      uses: gitlab-mirror/gitlab-actions/checkout@v1
-      with:
-        repository: mitradranirban/offed
-        path: offed
+      run: | 
+        git clone --depth=1 https://gitlab.com/mitradranirban/offed.git offed
+        ls -la offed
       
     - name: Install Rust toolchain
       uses: dtolnay/rust-toolchain@stable
