@@ -31,31 +31,31 @@ jobs:
         sudo xcode-select --switch /Applications/Xcode.app/Contents/Developer || true
 
         - name: Create package.json and package-lock.json (for npm cache)
-      run: |
-        # minimal package.json so npm has a project root
-        cat > package.json <<'EOF'
-        {
-          "name": "offed-mac",
-          "version": "0.0.0"
-        }
-        EOF
-
-        # minimal package-lock.json (lockfileVersion 2 for npm@7+)
-        cat > package-lock.json <<'EOF'
-        {
-          "name": "offed-mac",
-          "version": "0.0.0",
-          "lockfileVersion": 2,
-          "requires": true,
-          "packages": {
-            "": {
+          run: |
+            # minimal package.json so npm has a project root
+            cat > package.json <<'EOF'
+            {
               "name": "offed-mac",
               "version": "0.0.0"
             }
-          },
-          "dependencies": {}
-        }
-        EOF
+            EOF
+
+            # minimal package-lock.json (lockfileVersion 2 for npm@7+)
+            cat > package-lock.json <<'EOF'
+            {
+              "name": "offed-mac",
+              "version": "0.2.0",
+              "lockfileVersion": 2,
+              "requires": true,
+              "packages": {
+                "": {
+                  "name": "offed-mac",
+                  "version": "0.2.0"
+                }
+              },
+              "dependencies": {}
+            }
+            EOF
         
 
     - name: Install Node.js
