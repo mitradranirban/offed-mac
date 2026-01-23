@@ -67,12 +67,14 @@ jobs:
         node-version: '20'
         
     - name: Install TailwindCSS CLI
+      working-directory: offed
       run: npm install -D tailwindcss @tailwindcss/cli
       
     - name: Install Trunk
       run: cargo install trunk
       
     - name: Download fontc sidecar (Apple Silicon)
+      working-directory: offed
       run: |
         mkdir -p crates/offed-tauri/binaries
         cd crates/offed-tauri/binaries
@@ -84,6 +86,7 @@ jobs:
         rm fontc-aarch64-apple-darwin.tar.gz
       
     - name: Build macOS app
+      working-directory: offed
       run: make build
       
     - name: Upload macOS app bundle
@@ -91,6 +94,6 @@ jobs:
       with:
         name: offed-macos-app
         path: |
-          target/release/bundle/macos/
+          offed/target/release/bundle/macos/
         retention-days: 30
         
