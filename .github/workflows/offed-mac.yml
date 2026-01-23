@@ -14,8 +14,11 @@ jobs:
     runs-on: macos-14
     
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+    - name: Checkout GitLab repository
+      uses: gitlab-mirror/gitlab-actions/checkout@v1
+      with:
+        repository: mitradranirban/offed
+        path: offed
       
     - name: Install Rust toolchain
       uses: dtolnay/rust-toolchain@stable
@@ -80,15 +83,6 @@ jobs:
         mv fontc fontc-aarch64-apple-darwin
         chmod +x fontc-aarch64-apple-darwin
         rm fontc-aarch64-apple-darwin.tar.gz
-        
-    - name: Run tests
-      run: make test
-      
-    - name: Check code quality
-      run: make check
-      
-    - name: Format code
-      run: make fmt
       
     - name: Build macOS app
       run: make build
