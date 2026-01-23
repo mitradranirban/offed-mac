@@ -37,6 +37,11 @@ jobs:
         node-version: '20'
         cache: 'npm'
         
+    - name: Create package.json (for npm cache)
+      run: |
+        mkdir -p .npm-cache
+        echo '{}' > package.json
+        
     - name: Install TailwindCSS CLI
       run: npm install -D tailwindcss @tailwindcss/cli
       
