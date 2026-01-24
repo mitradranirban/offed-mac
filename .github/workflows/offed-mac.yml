@@ -14,7 +14,12 @@ jobs:
     - name: Checkout GitLab repository
       run: |
         git clone --depth=1 https://gitlab.com/mitradranirban/offed.git offed
-
+        
+    - name: Install Rust with WASM Target
+      uses: dtolnay/rust-toolchain@stable
+      with:
+        targets: aarch64-apple-darwin, wasm32-unknown-unknown
+   
     - name: Create Package Manifests
       working-directory: ./offed
       run: |
@@ -47,10 +52,8 @@ jobs:
         
         # Verify it's globally accessible
         tailwindcss --version
-    - name: Install Rust
-      uses: dtolnay/rust-toolchain@stable
-      with:
-        targets: aarch64-apple-darwin
+ 
+ 
 
     - name: Install Trunk (Pre-compiled)
       working-directory: ./offed
