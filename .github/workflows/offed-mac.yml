@@ -15,48 +15,34 @@ jobs:
       run: |
         git clone --depth=1 https://gitlab.com/mitradranirban/offed.git offed
 
-    - name: Prepare NPM Environment
+    - name: Create Package Manifests
       working-directory: ./offed
       run: |
-        # Essential for node install to succeed and for caching
         cat > package.json <<'EOF'
-        {
-          "name": "offed-mac",
-          "version": "0.2.0"
+        { 
+          "name": "offed-mac", 
+          "version": "0.0.0",
+          "dependencies": {
+            "tailwindcss": "^4.0.0",
+            "@tailwindcss/cli": "^4.0.0"
+          }
         }
         EOF
-
-        cat > package-lock.json <<'EOF'
-        {
-          "name": "offed-mac",
-          "version": "0.2.0",
-          "lockfileVersion": 2,
-          "requires": true,
-          "packages": {
-            "": {
-              "name": "offed-mac",
-              "version": "0.2.0"
-            }
-          },
-          "dependencies": {}
-        }
-        EOF
+       
+        touch package-lock.json
 
     - name: Install Node.js
       uses: actions/setup-node@v4
       with:
         node-version: '20'
-        cache: 'npm'
-        cache-dependency-path: ./offed/package-lock.json
 
-    - name: Install Tools (Pre-compiled)
+    - name: Install Tailwind and Tauri CLI
       working-directory: ./offed
       run: |
-        # Use npm to get pre-compiled tauri and tailwind binaries quickly
-        npm install -g tailwindcss @tailwindcss/cli @tauri-apps/cli
-        
-        # FIX: Explicitly add global npm bin to PATH so Trunk can find tailwindcss
-        echo "$(npm config get prefix)/bin" >> $GITHUB_PATH
+        npm install
+        npm install -g @tauri-apps/cli
+        # Get absolute path for Tailwind to feed into Trunk
+        echo "TAILWIND_BIN=$(pwd)/node_modules/.bin/tailwindcss" >> $GITHUB_ENV
 
     - name: Install Rust
       uses: dtolnay/rust-toolchain@stable
@@ -79,12 +65,11 @@ jobs:
         mv crates/offed-tauri/binaries/fontc crates/offed-tauri/binaries/fontc-aarch64-apple-darwin
         chmod +x crates/offed-tauri/binaries/fontc-aarch64-apple-darwin
 
-    # --- ENFORCED MANUAL BUILD SEQUENCE ---
-    # This ignores the 'make build' target to ensure order and avoid re-compiling tools
-
+     
     - name: Build Frontend (Trunk)
       working-directory: ./offed/crates/offed-wasm
-      run: trunk build
+      run: |
+        TRUNK_TOOLS_TAILWIND=$TAILWIND_BIN trunk build --release
 
     - name: Build Desktop App (Tauri)
       working-directory: ./offed/crates/offed-tauri
