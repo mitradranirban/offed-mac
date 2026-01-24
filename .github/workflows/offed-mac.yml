@@ -4,8 +4,6 @@ name: macOS Build
 on:
   push:
     branches: [ main ]
-  pull_request:
-    branches: [ main ]
   workflow_dispatch:
 
 jobs:
@@ -17,83 +15,83 @@ jobs:
       run: |
         git clone --depth=1 https://gitlab.com/mitradranirban/offed.git offed
 
-    - name: Change to project directory
-      run: cd offed
+    - name: Prepare NPM Environment
+      working-directory: ./offed
+      run: |
+        # Essential for node install to succeed and for caching
+        cat > package.json <<'EOF'
+        {
+          "name": "offed-mac",
+          "version": "0.2.0"
+        }
+        EOF
+
+        cat > package-lock.json <<'EOF'
+        {
+          "name": "offed-mac",
+          "version": "0.2.0",
+          "lockfileVersion": 2,
+          "requires": true,
+          "packages": {
+            "": {
+              "name": "offed-mac",
+              "version": "0.2.0"
+            }
+          },
+          "dependencies": {}
+        }
+        EOF
+
+    - name: Install Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+        cache-dependency-path: ./offed/package-lock.json
+
+    - name: Install Tools (Pre-compiled)
+      working-directory: ./offed
+      run: |
+        # Use npm to get pre-compiled tauri and tailwind binaries quickly
+        npm install -g tailwindcss @tailwindcss/cli @tauri-apps/cli
+        
+        # FIX: Explicitly add global npm bin to PATH so Trunk can find tailwindcss
+        echo "$(npm config get prefix)/bin" >> $GITHUB_PATH
 
     - name: Install Rust
       uses: dtolnay/rust-toolchain@stable
       with:
         targets: aarch64-apple-darwin
 
-    - name: Setup Xcode
-      run: |
-        sudo xcodebuild -license accept || true
-        sudo xcode-select --switch /Applications/Xcode.app/Contents/Developer || true
-
-    - name: Create package.json and package-lock.json (for npm cache)
-      run: |
-        # minimal package.json so npm has a project root
-        cat > package.json <<'EOF'
-        {
-          "name": "offed-mac",
-          "version": "0.0.0"
-        }
-        EOF
-
-        # minimal package-lock.json (lockfileVersion 2 for npm@7+)
-        cat > package-lock.json <<'EOF'
-        {
-          "name": "offed-mac",
-          "version": "0.0.0",
-          "lockfileVersion": 2,
-          "requires": true,
-          "packages": {
-            "": {
-              "name": "offed-mac",
-              "version": "0.0.0"
-            }
-          },
-          "dependencies": {}
-        }
-        EOF
-        
-    - name: Install Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '20'
-
-    - name: Install TailwindCSS CLI globally
-      working-directory: ./offed
-      run: npm install -g tailwindcss @tailwindcss/cli
-
-    - name: Install prebuilt Trunk v0.21.14
+    - name: Install Trunk (Pre-compiled)
       working-directory: ./offed
       run: |
-        curl -L -o trunk.tar.gz \
-          https://github.com/trunk-rs/trunk/releases/download/v0.21.14/trunk-aarch64-apple-darwin.tar.gz
+        curl -L -o trunk.tar.gz https://github.com/trunk-rs/trunk/releases/download/v0.21.14/trunk-aarch64-apple-darwin.tar.gz
         tar -xzf trunk.tar.gz
         sudo mv trunk /usr/local/bin/
-        trunk --version
 
     - name: Download fontc sidecar
       working-directory: ./offed
       run: |
         mkdir -p crates/offed-tauri/binaries
-        cd crates/offed-tauri/binaries
-        curl -L -o fontc-aarch64-apple-darwin.tar.gz \
-          https://github.com/googlefonts/fontc/releases/latest/download/fontc-aarch64-apple-darwin.tar.gz
-        tar -xzf fontc-aarch64-apple-darwin.tar.gz
-        mv fontc fontc-aarch64-apple-darwin
-        chmod +x fontc-aarch64-apple-darwin
+        curl -L -o fontc.tar.gz https://github.com/googlefonts/fontc/releases/latest/download/fontc-aarch64-apple-darwin.tar.gz
+        tar -xzf fontc.tar.gz -C crates/offed-tauri/binaries
+        mv crates/offed-tauri/binaries/fontc crates/offed-tauri/binaries/fontc-aarch64-apple-darwin
+        chmod +x crates/offed-tauri/binaries/fontc-aarch64-apple-darwin
 
-    - name: Build with Makefile
-      working-directory: ./offed
-      run: make build
+    # --- ENFORCED MANUAL BUILD SEQUENCE ---
+    # This ignores the 'make build' target to ensure order and avoid re-compiling tools
 
-    - name: Upload macOS app bundle
+    - name: Build Frontend (Trunk)
+      working-directory: ./offed/crates/offed-wasm
+      run: trunk build
+
+    - name: Build Desktop App (Tauri)
+      working-directory: ./offed/crates/offed-tauri
+      run: tauri build
+
+    - name: Upload Artifacts
       uses: actions/upload-artifact@v4
       with:
         name: offed-macos-app
-        path: offed/target/release/bundle/macos/
-        retention-days: 30
-        
+        path: ./offed/target/release/bundle/macos/*.app
