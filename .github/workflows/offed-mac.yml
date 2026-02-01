@@ -66,23 +66,25 @@ jobs:
       working-directory: ./offed
       run: |
         mkdir -p crates/offed-tauri/binaries
+        
         # 1. Download Silicon version
         curl -L -o fontc_arm.tar.gz https://github.com/googlefonts/fontc/releases/latest/download/fontc-aarch64-apple-darwin.tar.gz
         tar -xzf fontc_arm.tar.gz
-        mv fontc fontc-aarch64
+        mv fontc crates/offed-tauri/binaries/fontc-aarch64-apple-darwin
         
         # 2. Download Intel version
         curl -L -o fontc_intel.tar.gz https://github.com/googlefonts/fontc/releases/latest/download/fontc-x86_64-apple-darwin.tar.gz
         tar -xzf fontc_intel.tar.gz
-        mv fontc fontc-x86_64
+        mv fontc crates/offed-tauri/binaries/fontc-x86_64-apple-darwin
         
         # 3. MERGE into a Universal Binary
-        # This creates the exact file Tauri is looking for
-        lipo -create fontc-aarch64 fontc-x86_64 -output crates/offed-tauri/binaries/fontc-universal-apple-darwin
+        lipo -create \
+          crates/offed-tauri/binaries/fontc-aarch64-apple-darwin \
+          crates/offed-tauri/binaries/fontc-x86_64-apple-darwin \
+          -output crates/offed-tauri/binaries/fontc-universal-apple-darwin
         
-        # 4. Clean up and set permissions
-        chmod +x crates/offed-tauri/binaries/fontc-universal-apple-darwin
-        rm fontc-aarch64 fontc-x86_64 *.tar.gz
+        # 4. Set permissions (Keep all 3 files)
+        chmod +x crates/offed-tauri/binaries/fontc-*
      
     - name: Build Frontend (Trunk)
       working-directory: ./offed/crates/offed-wasm
