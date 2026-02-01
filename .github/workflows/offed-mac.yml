@@ -100,5 +100,5 @@ jobs:
       with:
         name: offed-macos-app
         path: |
-          ./offed/target/release/bundle/macos/*.app
-          ./offed/target/release/bundle/dmg/*.dmg
+          ./offed/target/universal-apple-darwin/release/bundle/macos/*.app
+          ./offed/target/universal-apple-darwin/release/bundle/dmg/*.dmg
